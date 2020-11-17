@@ -3,4 +3,4 @@
 - Proteus 8
 - Keli C51
 ## Requires:
-  ![alt text](7seg/BaiTap.png)
+  ![alt text](https://github.com/uyentt99/Kittchen-Timer/blob/main/7seq/Baitap.PNG)
