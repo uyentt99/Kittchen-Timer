@@ -3,4 +3,4 @@
 - Proteus 8
 - Keli C51
 ## Requires:
-  ![alt text](http://url/to/img.png)
+  ![alt text](7seg/BaiTap.png)
