@@ -1,0 +1,3 @@
+".\Objects\main.obj" 
+TO ".\Objects\7seq" 
+PRINT(".\Listings\7seq.m51")
