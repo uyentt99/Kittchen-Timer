@@ -42,44 +42,39 @@ DISPLAY:
 	MOVC A,@A+dptr
 	MOV P0, A
 	
-	CJNE R1, #0, DEC_TIME
-	
-	CALL DELAY_100ms
+	CJNE R1, #0, DEC_TIME	; if R1=1 decrease time
+	CALL DELAY_250ms
 	LJMP CHANGE_NUM 
 	
 DEC_TIME:
+	DEC R6
+	CJNE R6, #0, DONE_NUM	; if R6>0 not decrease num 
+	MOV R6, #240				; R6= 240, delay time = 240*250 = 6000ms = 1 minute
 	DEC R0
-	MOV A, R0
-	RLC A				
-	JNC DONE_BUZZER ; if R0>0 not turn buzzer
+	DONE_NUM:
+	CJNE R0, #0, DONE_BUZZER 	; if R0>0 not turn buzzer
 	SETB P0.7 
-	MOV R0, #0
 	DONE_BUZZER:
-	CALL DELAY_1M
+	CALL DELAY_250ms
 	JMP DISPLAY
+	
 ;=================================================================
 ;Delay
 ;=================================================================
-;deylay 1s
-DELAY_1M:
-	MOV tmod,#10h
-	MOV R6,#6000 ;6000
-	JMP DELAY_10ms
-	
-;delay 1 minute
-DELAY_100ms:
-	mov tmod,#10h
-	mov R6,#10
-	JMP DELAY_10ms
-;delay 10ms*r6
-DELAY_10ms:
-	mov th1,#high(-10000)
-	mov tl1,#low(-10000)
-	setb tr1
-	jnb tf1,$
-	clr tr1
-	clr tf1
-	djnz R6,DELAY_10ms
+;deylay 250ms
+DELAY_250ms:
+	MOV R7, #5
+;delay 50m*r7
+DELAY_50ms:
+	CLR ET0					;disable timer 0 isr
+	MOV	TMOD, #01h			; mode 1(16 bits)
+	MOV	TH0, #3Ch			; delay 50k cycles
+	MOV TL0, #0B0h
+	CLR TF0					; clear flag
+	SETB TR0				; start timer 0
+WAIT_50ms:
+	JNB TF0, WAIT_50ms		; wait for flag
+	DJNZ R7, DELAY_50ms
 	ret
 ;==================================================================
 ; ISR0 
@@ -88,7 +83,8 @@ ISR0:
 	MOV A,#1 
 	XRL A, @R1
 	MOV R1, A				; set state
-	CLR P0.7
+	MOV R6, #240			; R6= 240, delay time = 240*250 = 6000ms = 1 minute
+	CLR P0.7				; turn of 
 	RETI 					; return from interrupt
 ;==================================================================
 ; ISR1 

@@ -1,4 +1,4 @@
-A51 MACRO ASSEMBLER  MAIN                                                                 11/17/2020 11:43:37 PAGE     1
+A51 MACRO ASSEMBLER  MAIN                                                                 11/22/2020 22:57:58 PAGE     1
 
 
 MACRO ASSEMBLER A51 V8.2.7.0
@@ -12,9 +12,9 @@ LOC  OBJ            LINE     SOURCE
 0000                   2     ORG 0000h               ; entry address for 8051 RESET
 0000 020100            3             LJMP MAIN       ; move MAIN away from interrupt vector table
 0003                   4     ORG 0003h               ; vector address for interrupt 0
-0003 02015F            5             LJMP ISR0       ; jump to ISR0
+0003 020159            5             LJMP ISR0       ; jump to ISR0
 0013                   6     ORG 0013h               ; vector address for interrupt 1
-0013 020166            7             LJMP ISR1       ; jump to ISR1
+0013 020162            7             LJMP ISR1       ; jump to ISR1
                        8     ;=================================================================
                        9     ;Code segment
                       10     ;=================================================================
@@ -23,7 +23,7 @@ LOC  OBJ            LINE     SOURCE
 0100 75A885           13             MOV IE, #10000101B      ; enable external interrupts IE0, IE1
 0103 D288             14             SETB IT0                        ; negative edge trigger for interrupt 0
 0105 D28A             15             SETB IT1                        ; negative edge trigger for interrupt 1
-0107 90016D           16             MOV dptr,#maled7seg
+0107 900169           16             MOV dptr,#maled7seg
 010A 7800             17             MOV R0, #0
 010C 7900             18             MOV R1, #0
   0090                19             addbut bit p1.0
@@ -52,76 +52,71 @@ LOC  OBJ            LINE     SOURCE
 0127 93               42             MOVC A,@A+dptr
 0128 F580             43             MOV P0, A
                       44             
-012A B90005           45             CJNE R1, #0, DEC_TIME
-                      46             
-012D 3146             47             CALL DELAY_100ms
-012F 02010E           48             LJMP CHANGE_NUM 
-                      49             
-0132                  50     DEC_TIME:
-0132 18               51             DEC R0
-0133 E8               52             MOV A, R0
-0134 33               53             RLC A                           
-0135 5004             54             JNC DONE_BUZZER ; if R0>0 not turn buzzer
-0137 D287             55             SETB P0.7 
-0139 7800             56             MOV R0, #0
-013B                  57             DONE_BUZZER:
-A51 MACRO ASSEMBLER  MAIN                                                                 11/17/2020 11:43:37 PAGE     2
+012A B90005           45             CJNE R1, #0, DEC_TIME   ; if R1=1 decrease time
+012D 3142             46             CALL DELAY_250ms
+012F 02010E           47             LJMP CHANGE_NUM 
+                      48             
+0132                  49     DEC_TIME:
+0132 1E               50             DEC R6
+0133 BE0003           51             CJNE R6, #0, DONE_NUM   ; if R6>0 not decrease num 
+0136 7EF0             52             MOV R6, #240                            ; R6= 240, delay time = 240*250 = 6000ms = 
+                             1 minute
+0138 18               53             DEC R0
+0139                  54             DONE_NUM:
+0139 B80002           55             CJNE R0, #0, DONE_BUZZER        ; if R0>0 not turn buzzer
+013C D287             56             SETB P0.7 
+A51 MACRO ASSEMBLER  MAIN                                                                 11/22/2020 22:57:58 PAGE     2
 
-013B 313F             58             CALL DELAY_1M
-013D 80E7             59             JMP DISPLAY
-                      60     ;=================================================================
-                      61     ;Delay
-                      62     ;=================================================================
-                      63     ;deylay 1s
-013F                  64     DELAY_1M:
-013F 758910           65             MOV tmod,#10h
-0142 7E70             66             MOV R6,#6000 ;6000
-*** _________________________________________^
-*** WARNING #A52 IN 66 (main.a51, LINE 66): VALUE HAS BEEN TRUNCATED TO 8 BITS
-0144 8007             67             JMP DELAY_10ms
-                      68             
-                      69     ;delay 1 minute
-0146                  70     DELAY_100ms:
-0146 758910           71             mov tmod,#10h
-0149 7E0A             72             mov R6,#10
-014B 8000             73             JMP DELAY_10ms
-                      74     ;delay 10ms*r6
-014D                  75     DELAY_10ms:
-014D 758DD8           76             mov th1,#high(-10000)
-0150 758BF0           77             mov tl1,#low(-10000)
-0153 D28E             78             setb tr1
-0155 308FFD           79             jnb tf1,$
-0158 C28E             80             clr tr1
-015A C28F             81             clr tf1
-015C DEEF             82             djnz R6,DELAY_10ms
-015E 22               83             ret
-                      84     ;==================================================================
-                      85     ; ISR0 
-                      86     ;==================================================================
-015F                  87     ISR0:
-015F 7401             88             MOV A,#1 
-0161 67               89             XRL A, @R1
-0162 F9               90             MOV R1, A                               ; set state
-0163 C287             91             CLR P0.7
-0165 32               92             RETI                                    ; return from interrupt
-                      93     ;==================================================================
-                      94     ; ISR1 
-                      95     ;==================================================================
-0166                  96     ISR1:
-0166 7900             97             MOV R1, #0                              ; set state
-0168 7800             98             MOV R0, #0                              ; reset number
-016A C287             99             CLR P0.7        
-016C 32              100             RETI                                    ; return from interrupt
-                     101     ;==================================================================     
-                     102     ;Common Anode 7SEG-LED numbers
-                     103     ;==================================================================     
-016D                 104     maled7seg:
-016D 40792430        105             db      040h,079h,024h,030h,19h,12h,02h,078h,00h,10h    
-0171 19120278                
-0175 0010                    
-                     106     ;==================================================================             
-                     107     END                                             ; end of program
-A51 MACRO ASSEMBLER  MAIN                                                                 11/17/2020 11:43:37 PAGE     3
+013E                  57             DONE_BUZZER:
+013E 3142             58             CALL DELAY_250ms
+0140 80E4             59             JMP DISPLAY
+                      60             
+                      61     ;=================================================================
+                      62     ;Delay
+                      63     ;=================================================================
+                      64     ;deylay 250ms
+0142                  65     DELAY_250ms:
+0142 7F05             66             MOV R7, #5
+                      67     ;delay 50m*r7
+0144                  68     DELAY_50ms:
+0144 C2A9             69             CLR ET0                                 ;disable timer 0 isr
+0146 758901           70             MOV     TMOD, #01h                      ; mode 1(16 bits)
+0149 758C3C           71             MOV     TH0, #3Ch                       ; delay 50k cycles
+014C 758AB0           72             MOV TL0, #0B0h
+014F C28D             73             CLR TF0                                 ; clear flag
+0151 D28C             74             SETB TR0                                ; start timer 0
+0153                  75     WAIT_50ms:
+0153 308DFD           76             JNB TF0, WAIT_50ms              ; wait for flag
+0156 DFEC             77             DJNZ R7, DELAY_50ms
+0158 22               78             ret
+                      79     ;==================================================================
+                      80     ; ISR0 
+                      81     ;==================================================================
+0159                  82     ISR0:
+0159 7401             83             MOV A,#1 
+015B 67               84             XRL A, @R1
+015C F9               85             MOV R1, A                               ; set state
+015D 7EF0             86             MOV R6, #240                    ; R6= 240, delay time = 240*250 = 6000ms = 1 minute
+015F C287             87             CLR P0.7                                ; turn of 
+0161 32               88             RETI                                    ; return from interrupt
+                      89     ;==================================================================
+                      90     ; ISR1 
+                      91     ;==================================================================
+0162                  92     ISR1:
+0162 7900             93             MOV R1, #0                              ; set state
+0164 7800             94             MOV R0, #0                              ; reset number
+0166 C287             95             CLR P0.7        
+0168 32               96             RETI                                    ; return from interrupt
+                      97     ;==================================================================     
+                      98     ;Common Anode 7SEG-LED numbers
+                      99     ;==================================================================     
+0169                 100     maled7seg:
+0169 40792430        101             db      040h,079h,024h,030h,19h,12h,02h,078h,00h,10h    
+016D 19120278                
+0171 0010                    
+                     102     ;==================================================================             
+                     103     END                                             ; end of program
+A51 MACRO ASSEMBLER  MAIN                                                                 11/22/2020 22:57:58 PAGE     3
 
 SYMBOL TABLE LISTING
 ------ ----- -------
@@ -133,31 +128,33 @@ ADDBUT . . . . . .  B ADDR   0090H.0 A
 BIGGER10 . . . . .  C ADDR   011EH   A   
 CHANGE_NUM . . . .  C ADDR   010EH   A   
 DEC_TIME . . . . .  C ADDR   0132H   A   
-DELAY_100MS. . . .  C ADDR   0146H   A   
-DELAY_10MS . . . .  C ADDR   014DH   A   
-DELAY_1M . . . . .  C ADDR   013FH   A   
+DELAY_250MS. . . .  C ADDR   0142H   A   
+DELAY_50MS . . . .  C ADDR   0144H   A   
 DISPLAY. . . . . .  C ADDR   0126H   A   
-DONE_BUZZER. . . .  C ADDR   013BH   A   
+DONE_BUZZER. . . .  C ADDR   013EH   A   
+DONE_NUM . . . . .  C ADDR   0139H   A   
+ET0. . . . . . . .  B ADDR   00A8H.1 A   
 IE . . . . . . . .  D ADDR   00A8H   A   
-ISR0 . . . . . . .  C ADDR   015FH   A   
-ISR1 . . . . . . .  C ADDR   0166H   A   
+ISR0 . . . . . . .  C ADDR   0159H   A   
+ISR1 . . . . . . .  C ADDR   0162H   A   
 IT0. . . . . . . .  B ADDR   0088H.0 A   
 IT1. . . . . . . .  B ADDR   0088H.2 A   
 MAIN . . . . . . .  C ADDR   0100H   A   
-MALED7SEG. . . . .  C ADDR   016DH   A   
+MALED7SEG. . . . .  C ADDR   0169H   A   
 P0 . . . . . . . .  D ADDR   0080H   A   
 P1 . . . . . . . .  D ADDR   0090H   A   
 SHOW_NUM . . . . .  C ADDR   0116H   A   
 SUBBUT . . . . . .  B ADDR   0090H.1 A   
-TF1. . . . . . . .  B ADDR   0088H.7 A   
-TH1. . . . . . . .  D ADDR   008DH   A   
-TL1. . . . . . . .  D ADDR   008BH   A   
+TF0. . . . . . . .  B ADDR   0088H.5 A   
+TH0. . . . . . . .  D ADDR   008CH   A   
+TL0. . . . . . . .  D ADDR   008AH   A   
 TMOD . . . . . . .  D ADDR   0089H   A   
-TR1. . . . . . . .  B ADDR   0088H.6 A   
+TR0. . . . . . . .  B ADDR   0088H.4 A   
+WAIT_50MS. . . . .  C ADDR   0153H   A   
 ZONE_2 . . . . . .  C ADDR   0112H   A   
 
 
 REGISTER BANK(S) USED: 0 
 
 
-ASSEMBLY COMPLETE.  1 WARNING(S), 0 ERROR(S)
+ASSEMBLY COMPLETE.  0 WARNING(S), 0 ERROR(S)
