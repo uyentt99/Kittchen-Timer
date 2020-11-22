@@ -41,7 +41,6 @@ DISPLAY:
 	MOV A, R0
 	MOVC A,@A+dptr
 	MOV P0, A
-	
 	CJNE R1, #0, DEC_TIME	; if R1=1 decrease time
 	CALL DELAY_250ms
 	LJMP CHANGE_NUM 
@@ -49,12 +48,16 @@ DISPLAY:
 DEC_TIME:
 	DEC R6
 	CJNE R6, #0, DONE_NUM	; if R6>0 not decrease num 
-	MOV R6, #240				; R6= 240, delay time = 240*250 = 6000ms = 1 minute
+	MOV R6, #240			; R6= 240, delay time = 240*250 = 6000ms = 1 minute
 	DEC R0
-	DONE_NUM:
+	MOV A, R0				; move data to A
+	RLC A
+	JNC	DONE_NUM
+	MOV R0, #0				; reset if smaller than 0
+DONE_NUM:
 	CJNE R0, #0, DONE_BUZZER 	; if R0>0 not turn buzzer
 	SETB P0.7 
-	DONE_BUZZER:
+DONE_BUZZER:
 	CALL DELAY_250ms
 	JMP DISPLAY
 	
